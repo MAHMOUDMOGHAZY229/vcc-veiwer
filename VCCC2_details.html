@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>View VCC Details - Editable</title>
+<style>
+  :root{--accent:#d9534f;--muted:#f5f5f5;--card:#fff;--text:#222}
+  body{font-family:Arial, "Segoe UI", Roboto; background:#fafafa; margin:0; padding:30px; direction:ltr}
+  .overlay{max-width:900px;margin:40px auto}
+  .modal{background:var(--card);border:1px solid #d0d0d0;box-shadow:0 6px 18px rgba(0,0,0,.08);border-radius:4px;overflow:hidden}
+  .modal-header{background:#4a4a4a;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+  .modal-header h2{margin:0;font-size:16px}
+  .modal-body{padding:18px}
+  .section-title{color:var(--accent);font-weight:700;margin-bottom:10px;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row{display:flex;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #eee;align-items:center;font-size:12px}
+  .row label{color:#666;width:48%;font-size:12px}
+  .row .value, .row input.edit-input{width:48%;font-weight:600;color:var(--text);text-align:left;font-size:12px}
+  .actions{display:flex;gap:8px;padding:12px;background:#fafafa;border-top:1px solid #eee;justify-content:flex-end;flex-wrap:wrap}
+  button{padding:8px 12px;border-radius:4px;border:1px solid #bbb;background:#fff;cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:rgba(0,0,0,.08)}
+  button.warn{background:#f0ad4e;color:#fff;border-color:rgba(0,0,0,.08)}
+  .status{color:var(--accent);font-weight:700;font-size:12px}
+  input[type="text"]{width:100%;box-sizing:border-box;padding:6px;border:1px solid #ccc;border-radius:3px;font-size:12px}
+  @media print{
+    body{background:#fff}
+    .actions, .close-x{display:none}
+    .modal{box-shadow:none;border:0}
+  }
+  .close-x{color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="overlay">
+  <div class="modal" role="dialog" aria-labelledby="title">
+    <div class="modal-header">
+      <h2 id="title">View VCC Details</h2>
+      <div class="close-x" title="Close">✕</div>
+    </div>
+
+    <div class="modal-body">
+      <!-- العنوان باللون الأحمر -->
+      <div class="section-title">VCC/Vehicle Details</div>
+
+      <div class="grid" id="fieldsGrid">
+        <div>
+          <div class="row"><label>VCC No :</label><div class="value" data-key="vccNo">16351921</div></div>
+          <div class="row"><label>VCC Generation Date :</label><div class="value" data-key="vccDate">2025-09-25</div></div>
+          <div class="row"><label>Engine Number :</label><div class="value" data-key="engineNo">-</div></div>
+          <div class="row"><label>Vehicle Drive :</label><div class="value" data-key="drive">Left Hand Drive</div></div>
+          <div class="row"><label>Engine Capacity :</label><div class="value" data-key="engCap">-</div></div>
+          <div class="row"><label>Passenger Capacity :</label><div class="value" data-key="passCap">-</div></div>
+          <div class="row"><label>Vehicle Brand Name :</label><div class="value" data-key="brand">JEEP</div></div>
+          <div class="row"><label>Vehicle Color :</label><div class="value" data-key="color">WHITE</div></div>
+          <div class="row"><label>Declaration Number :</label><div class="value" data-key="declNo">1060039733325</div></div>
+          <div class="row"><label>Owner Code :</label><div class="value" data-key="ownerCode">AE-7003497</div></div>
+          <div class="row"><label>Print Remarks :</label><div class="value" data-key="remarks">GCC Standard</div></div>
+        </div>
+        <div>
+          <!-- Printed/Downloaded باللون الأحمر -->
+          <div class="row"><label>VCC Status :</label><div class="value status" data-key="status">Printed/Downloaded</div></div>
+          <div class="row"><label>Chassis No :</label><div class="value" data-key="chassis">HJ4ABBHKXSN074422</div></div>
+          <div class="row"><label>Year of Built :</label><div class="value" data-key="year">2025</div></div>
+          <div class="row"><label>Country of Origin :</label><div class="value" data-key="origin">CHINA</div></div>
+          <div class="row"><label>Carriage Capacity :</label><div class="value" data-key="carCap">-</div></div>
+          <div class="row"><label>Vehicle Model :</label><div class="value" data-key="model">ROX 01</div></div>
+          <div class="row"><label>Vehicle Type :</label><div class="value" data-key="type">4WD</div></div>
+          <div class="row"><label>Specification Standard Name :</label><div class="value" data-key="spec">GCC Standard</div></div>
+          <div class="row"><label>Declaration Date :</label><div class="value" data-key="declDate">2025-09-25</div></div>
+          <div class="row"><label>Owner Name :</label><div class="value" data-key="ownerName">United Custom Broker and Auto Trading FZE</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="editBtn">Edit</button>
+      <button id="saveBtn" class="primary">Save (Download JSON)</button>
+      <button id="printBtn" class="warn">Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const editBtn = document.getElementById('editBtn');
+const saveBtn = document.getElementById('saveBtn');
+const printBtn = document.getElementById('printBtn');
+const grid = document.getElementById('fieldsGrid');
+
+let editing = false;
+
+function toggleEdit(){
+  editing = !editing;
+  editBtn.textContent = editing ? 'Done' : 'Edit';
+  const values = grid.querySelectorAll('.value, input.edit-input');
+  values.forEach(v=>{
+    const key = v.getAttribute('data-key');
+    if(editing && v.tagName.toLowerCase() === 'div'){
+      const txt = v.textContent.trim();
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = txt === '-' ? '' : txt;
+      input.setAttribute('data-key', key);
+      input.className = 'edit-input';
+      v.replaceWith(input);
+    } else if(!editing && v.tagName.toLowerCase() === 'input'){
+      const txt = v.value.trim() !== '' ? v.value.trim() : '-';
+      const div = document.createElement('div');
+      div.className = 'value';
+      if(key === 'status'){div.classList.add('status');}
+      div.setAttribute('data-key', key);
+      div.textContent = txt;
+      v.replaceWith(div);
+    }
+  });
+}
+
+function collectData(){
+  const obj = {};
+  const nodes = grid.querySelectorAll('[data-key]');
+  nodes.forEach(n=>{
+    const k = n.getAttribute('data-key');
+    let val = '';
+    if(n.tagName.toLowerCase() === 'input') val = n.value.trim();
+    else val = n.textContent.trim();
+    obj[k] = val === '' ? '-' : val;
+  });
+  return obj;
+}
+
+function downloadJSON(){
+  const data = collectData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `VCC_${data.vccNo || 'data'}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+editBtn.addEventListener('click', toggleEdit);
+saveBtn.addEventListener('click', downloadJSON);
+printBtn.addEventListener('click', ()=>window.print());
+
+document.querySelector('.close-x').addEventListener('click', ()=>{
+  document.querySelector('.overlay').style.display = 'none';
+});
+</script>
+
+</body>
+</html>
